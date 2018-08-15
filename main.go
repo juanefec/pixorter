@@ -82,7 +82,7 @@ var (
 	workers = flag.Int("workers", 1, "number of workers to use")
 )
 
-func SaveImageFile() {
+func SaveImageFile(img *image.Image) {
 	flag.Parse()
 
 	// open a new file
@@ -91,8 +91,6 @@ func SaveImageFile() {
 		log.Fatal(err)
 	}
 
-	// create the image
-	var img image.Image
 
 	// and encoding it
 	fmt := filepath.Ext(*output)
