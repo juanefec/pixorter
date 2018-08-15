@@ -10,54 +10,40 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/juenefec/pixorter/sorter"
+	"github.com/juanefec/pixorter/sorter"
 
 	"fmt"
 	"image"
 )
 
+var fileName = flag.String("filename", "image.jpg", "use like: -filename=image.jpeg")
+
 func main() {
+	flag.Parse()
 	// You can register another format here
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 
-	file, err := os.Open("./image.jpg")
-
+	file, err := os.Open("./" + *fileName)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	defer file.Close()
+	sorted := sorter.Sort(file)
+	SaveImageFile(sorted, *fileName)
 
-	pixels, err := sorter.getPixels(file)
-
-	if err != nil {
-		fmt.Println("Error: Image could not be decoded")
-		os.Exit(1)
-	}
-
-	fmt.Println(pixels)
 }
 
-var (
-	output  = flag.String("out", "mandelbrot.png", "name of the output image file")
-	height  = flag.Int("h", 2048, "height of the output image in pixels")
-	width   = flag.Int("w", 2048, "width of the output image in pixels")
-	mode    = flag.String("mode", "seq", "mode: seq, px, row, workers")
-	workers = flag.Int("workers", 1, "number of workers to use")
-)
-
-func SaveImageFile(img image.Image) {
-	flag.Parse()
-
+func SaveImageFile(img image.Image, fname string) {
+	name := "SORTED" + fname
 	// open a new file
-	f, err := os.Create(*output)
+	f, err := os.Create(name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// and encoding it
-	fmt := filepath.Ext(*output)
+	fmt := filepath.Ext(name)
 	switch fmt {
 	case ".png":
 		err = png.Encode(f, img)
