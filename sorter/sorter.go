@@ -5,17 +5,12 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"math"
 	"os"
 	"sync"
 )
 
 // Pixel struct example
-type Pixel struct {
-	R int
-	G int
-	B int
-	A int
-}
 
 type img struct {
 	h, w int
@@ -33,9 +28,13 @@ func Sort(imgfile io.ReadCloser) image.Image {
 		os.Exit(1)
 	}
 
-	outImg := &img{w, h, pixels}
-
-	workersFillImg(outImg)
+	originalImg := img{w, h, pixels}
+	newImg := make([][]color.RGBA, len(pixels))
+	for i := range newImg {
+		newImg[i] = make([]color.RGBA, len(pixels[i]))
+	}
+	outImg := &img{w, h, newImg}
+	workersFillImg(originalImg, outImg)
 	return outImg
 }
 
@@ -71,16 +70,15 @@ func rgbaToRGBA(r uint32, g uint32, b uint32, a uint32) color.RGBA {
 // real	0m17.304s
 // user	0m40.615s
 // sys	0m2.517s
-func workersFillImg(m *img) {
-	var workers int = 3000
+func workersFillImg(m img, n *img) {
+	workers := 32
 	var wg sync.WaitGroup
 	wg.Add(workers)
-
 	c := make(chan struct{ i, j int })
 	for i := 0; i < workers; i++ {
 		go func() {
 			for t := range c {
-				fillPixel(m, t.i, t.j)
+				fillPixel(m, n, t.i, t.j)
 			}
 			wg.Done()
 		}()
@@ -95,6 +93,35 @@ func workersFillImg(m *img) {
 	wg.Wait()
 }
 
-func fillPixel(m *img, i, j int) {
-	m.m[i][j].R, m.m[i][j].G, m.m[i][j].B = m.m[i][j].G, m.m[i][j].B, m.m[i][j].R
+func fillPixel(m img, n *img, i, j int) {
+	//dis(m, n, i, j)
+	dat(m, n, i, j)
+
+}
+func dis(m img, n *img, i, j int) {
+	if i > 15 && j > 13 {
+		ni, nj := i-15, j-13
+		n.m[i][j].R, n.m[i][j].G, n.m[i][j].B, n.m[i][j].A = m.m[ni][nj].R, m.m[ni][nj].G, m.m[ni][nj].B, m.m[ni][nj].A
+
+	}
+}
+func dat(m img, n *img, i, j int) {
+	if rgbAvg(m.m[i][j]) {
+		nR := m.m[i][j].R - 20
+		nG := m.m[i][j].G + 90
+		nB := m.m[i][j].B - 30
+		n.m[i][j].R, n.m[i][j].G, n.m[i][j].B, n.m[i][j].A = nR, nG, nB, m.m[i][j].A
+	} else {
+		n.m[i][j] = m.m[i][j]
+	}
+}
+
+func rgbAvg(c color.RGBA) bool {
+	avg := int((c.R + c.G + c.B + c.A) / 4)
+	dr, dg, db := abs(uint8(avg)-c.R), abs(uint8(avg)-c.G), abs(uint8(avg)-c.B)
+	return dr < 120 && dg < 130 && db < 90
+}
+
+func abs(n uint8) uint8 {
+	return uint8(math.Abs(float64(n)))
 }

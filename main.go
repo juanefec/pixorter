@@ -16,25 +16,28 @@ import (
 	"image"
 )
 
-var fileName = flag.String("filename", "image.jpg", "use like: -filename=image.jpeg")
-
 func main() {
+	fileName := flag.String("filename", "image.jpg", "use like: -filename=image.jpeg")
 	flag.Parse()
 	// You can register another format here
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 
-	file, err := os.Open("./" + *fileName)
+	file := ReadImageFile(*fileName)
+	sorted := sorter.Sort(file)
+	WriteImageFile(sorted, *fileName)
+
+}
+
+func ReadImageFile(fileName string) *os.File {
+	file, err := os.Open("./" + fileName)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	sorted := sorter.Sort(file)
-	SaveImageFile(sorted, *fileName)
-
+	return file
 }
 
-func SaveImageFile(img image.Image, fname string) {
+func WriteImageFile(img image.Image, fname string) {
 	name := "SORTED" + fname
 	// open a new file
 	f, err := os.Create(name)
