@@ -32,17 +32,11 @@ func dat(m img, n *img, i, j int) bool {
 	}
 }
 
-func rgbAvg(c color.RGBA) bool {
-	avg := int((c.R + c.G + c.B + c.A) / 4)
-	dr, dg, db := abs(uint8(avg)-c.R), abs(uint8(avg)-c.G), abs(uint8(avg)-c.B)
-	return dr < 120 && dg < 130 && db < 90
-}
-
 func daat(m img, n *img, i, j int) bool {
-	ni, nj := i+random(-52, 52), j+random(-52, 52)
+	ni, nj := i+random(-2, 2), j+random(-2, 2)
 	//fmt.Println(ni, nj)
-	canI := ni < len(m.m) && ni > 100
-	canJ := nj < len(m.m[i]) && nj > 100
+	canI := ni < len(m.m) && ni > 0
+	canJ := nj < len(m.m[i]) && nj > 0
 	//fmt.Println(canI, canJ)
 	if canI && canJ {
 		n.m[i][j] = m.m[ni][nj]
@@ -53,15 +47,21 @@ func daat(m img, n *img, i, j int) bool {
 	}
 }
 
-func juat(m img, n *img, i, j int, pch *chan color.RGBA) {
+func juat(m img, n *img, i, j int, pch chan pxm) {
 	datdaat(m, n, i, j)
 	c := m.m[i][j]
-	if int((c.R+c.G+c.B)/3) > 150 {
-		*pch <- n.m[i][j]
+	if int((c.R+c.G+c.B)/3) > 75 {
+		pch <- pxm{i, j, c}
 	}
 }
 
 // _____________________________common_____________________________
+
+func rgbAvg(c color.RGBA) bool {
+	avg := int((c.R + c.G + c.B + c.A) / 4)
+	dr, dg, db := abs(uint8(avg)-c.R), abs(uint8(avg)-c.G), abs(uint8(avg)-c.B)
+	return dr < 120 && dg < 130 && db < 90
+}
 
 func abs(n uint8) uint8 {
 	return uint8(math.Abs(float64(n)))

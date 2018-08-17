@@ -75,37 +75,65 @@ func rgbaToRGBA(r uint32, g uint32, b uint32, a uint32) color.RGBA {
 // user	0m40.615s
 // sys	0m2.517s
 func workersFillImg(m img, n *img) {
-
 	workers := 32
 	var wg sync.WaitGroup
-	wg.Add(workers)
+	wg.Add(workers + 1)
 	c := make(chan struct{ i, j int })
-	pch := make(chan color.RGBA, 100)
+	pch := make(chan pxm)
 	for i := 0; i < workers; i++ {
 		go func() {
 			for t := range c {
-				fillPixel(m, n, t.i, t.j, &pch)
+				fillPixel(m, n, t.i, t.j, pch)
 			}
 			wg.Done()
 		}()
 	}
+	chosen := make([]pxm, 2000)
 	go func() {
-		for m := range pch {
-			fmt.Println("esteee ", m)
+		for p := range pch {
+			chosen = append(chosen, p)
 		}
+		wg.Done()
 	}()
+
 	for i, row := range m.m {
 		for j := range row {
 			c <- struct{ i, j int }{i, j}
 		}
 	}
+
 	close(c)
+	close(pch)
 	wg.Wait()
+	fmt.Println(chosen)
+	for i := range chosen {
+		cant := random(-135, 135)
+		for w := 0; w < cant; w++ {
+			safeRefillPixel(n, chosen[i].c, chosen[i].i+w, chosen[i].j)
+		}
+	}
 }
 
-func fillPixel(m img, n *img, i, j int, pch *chan color.RGBA) {
+func fillPixel(m img, n *img, i, j int, pch chan pxm) {
 	//dis(m, n, i, j)
 	//datdaat(m, n, i, j)
 	juat(m, n, i, j, pch)
 
+}
+
+func safeRefillPixel(n *img, c color.RGBA, i, j int) {
+	canI := i < len(n.m) && i > 0
+	canJ := j < len(n.m[0]) && j > 0
+	if canI && canJ {
+		refillPixel(n, c, i, j)
+	}
+}
+
+func refillPixel(n *img, c color.RGBA, i, j int) {
+	n.m[i][j].R, n.m[i][j].G, n.m[i][j].B, n.m[i][j].A = 170, 170, 170, 170
+}
+
+type pxm struct {
+	i, j int
+	c    color.RGBA
 }

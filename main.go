@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	fileName := flag.String("filename", "image.jpg", "use like: -filename=image.jpeg")
+	fileName := flag.String("filename", "image2.jpg", "use like: -filename=image.jpeg")
 	flag.Parse()
 	// You can register another format here
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
