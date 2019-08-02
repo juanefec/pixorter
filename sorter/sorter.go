@@ -75,7 +75,7 @@ func rgbaToRGBA(r uint32, g uint32, b uint32, a uint32) color.RGBA {
 // user	0m40.615s
 // sys	0m2.517s
 func workersFillImg(m img, n *img) {
-	workers := 32
+	workers := 10
 	var wg sync.WaitGroup
 	wg.Add(workers + 1)
 	c := make(chan struct{ i, j int })
@@ -88,7 +88,8 @@ func workersFillImg(m img, n *img) {
 			wg.Done()
 		}()
 	}
-	chosen := make([]pxm, 2000)
+	
+	chosen := make([]pxm, 0)
 	go func() {
 		for p := range pch {
 			chosen = append(chosen, p)
@@ -105,9 +106,9 @@ func workersFillImg(m img, n *img) {
 	close(c)
 	close(pch)
 	wg.Wait()
-	fmt.Println(chosen)
+	//fmt.Println(chosen)
 	for i := range chosen {
-		cant := random(-135, 135)
+		cant := random(-25, 25)
 		for w := 0; w < cant; w++ {
 			safeRefillPixel(n, chosen[i].c, chosen[i].i+w, chosen[i].j)
 		}
